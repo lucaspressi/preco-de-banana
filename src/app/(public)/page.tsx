@@ -15,6 +15,8 @@ import {
   getFeaturedProducts,
   getFlashDeals,
 } from "@/lib/queries";
+import { PromoFeedGrid } from "@/components/home/promo-feed-grid";
+import { fetchPromoProducts } from "@/lib/promo-feed";
 import { getSiteSettings } from "@/lib/settings";
 
 /*
@@ -37,6 +39,12 @@ export default async function HomePage() {
       getActiveStores(),
       getActiveTestimonials(3),
     ]);
+
+  // Feed externo: falha nunca derruba a home - retorna lista vazia.
+  const promoProducts = await fetchPromoProducts({
+    limit: 8,
+    sort: "discount",
+  });
 
   return (
     <>
@@ -70,12 +78,26 @@ export default async function HomePage() {
             ))}
           </div>
         ) : (
-          <EmptyState
-            title="Nenhuma oferta publicada ainda"
-            description="Assim que você cadastrar produtos no painel administrativo, eles aparecem aqui automaticamente."
-          />
+          promoProducts.length === 0 && (
+            <EmptyState
+              title="Nenhuma oferta publicada ainda"
+              description="Assim que você cadastrar produtos no painel administrativo, eles aparecem aqui automaticamente."
+            />
+          )
         )}
       </section>
+
+      {/* Ofertas do monitor de precos (feed externo) */}
+      {promoProducts.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <SectionHeading
+            title="Ofertas de"
+            highlight="hoje"
+            subtitle="Selecionadas especialmente para você!"
+          />
+          <PromoFeedGrid products={promoProducts} />
+        </section>
+      )}
 
       {/* Ofertas relampago */}
       {flashDeals.length > 0 && (

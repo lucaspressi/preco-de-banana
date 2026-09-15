@@ -55,12 +55,12 @@ export function Hero({ title, subtitle, telegramUrl }: HeroProps) {
           */}
           <h1>
             <Image
-              src="/wordmark.webp"
+              src="/logo.webp"
               alt={title}
-              width={1344}
-              height={587}
+              width={1400}
+              height={467}
               priority
-              className="h-auto w-full max-w-[22rem] drop-shadow-[0_4px_10px_rgba(0,0,0,0.18)] sm:max-w-[26rem] lg:max-w-[30rem]"
+              className="h-auto w-full max-w-[26rem] drop-shadow-[0_4px_10px_rgba(0,0,0,0.18)] sm:max-w-[32rem] lg:max-w-[38rem]"
             />
           </h1>
 

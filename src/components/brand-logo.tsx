@@ -36,8 +36,8 @@ export function BrandLogo({
       <Image
         src="/logo.webp"
         alt="Preço de Banana"
-        width={640}
-        height={213}
+        width={1400}
+        height={467}
         priority
         style={{ height, width: "auto" }}
         className={cn(

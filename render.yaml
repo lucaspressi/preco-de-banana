@@ -62,3 +62,14 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
+
+      # Envio do codigo de login (opcional - Resend free 3.000/mes).
+      # Sem isso, o codigo aparece nos logs do servico.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+
+      # Feed externo de promocoes (opcional).
+      - key: PROMO_API_URL
+        sync: false

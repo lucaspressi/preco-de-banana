@@ -26,7 +26,7 @@ export default function AdminLoginPage() {
             Painel administrativo
           </h1>
           <p className="mt-1 text-sm text-ink-500">
-            Acesso restrito. Entre com suas credenciais.
+            Acesso restrito. Informe seu e-mail para receber um código.
           </p>
 
           <Suspense fallback={<div className="mt-6 h-56" />}>

@@ -3,129 +3,69 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { startSession } from "@/lib/auth";
-import { issueLoginCode, verifyLoginCode } from "@/lib/login-code";
-import { sendLoginCode } from "@/lib/mailer";
+import { authenticate, startSession } from "@/lib/auth";
 import {
   clientKeyFromHeaders,
   rateLimit,
   resetRateLimit,
 } from "@/lib/rate-limit";
-import { loginCodeSchema, loginEmailSchema } from "@/lib/validations";
+import { loginSchema } from "@/lib/validations";
 
 export interface LoginState {
-  step: "email" | "code";
-  email?: string;
   error?: string;
-  notice?: string;
-}
-
-/** Destino interno seguro - evita open redirect. */
-function safeNext(raw: FormDataEntryValue | null): string {
-  return typeof raw === "string" &&
-    raw.startsWith("/admin") &&
-    !raw.startsWith("//")
-    ? raw
-    : "/admin";
 }
 
 /**
- * Etapa 1: recebe o e-mail e envia o codigo.
+ * Autenticacao do admin.
  *
- * A resposta e sempre a mesma, exista ou nao o e-mail - nao permite
- * descobrir quais contas existem.
+ * - valida entrada com Zod
+ * - limita tentativas por IP (5 a cada 5 minutos)
+ * - mensagem generica e tempo de resposta constante: nao revela se o
+ *   e-mail existe
  */
-export async function requestCodeAction(
-  _prev: LoginState,
+export async function loginAction(
+  _prevState: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
-  const parsed = loginEmailSchema.safeParse({ email: formData.get("email") });
+  const parsed = loginSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
 
   if (!parsed.success) {
-    return { step: "email", error: "Informe um e-mail válido." };
+    return { error: "E-mail ou senha inválidos." };
   }
 
   const headerList = await headers();
-  const limit = rateLimit(
-    clientKeyFromHeaders(headerList, "login-code"),
-    5,
-    10 * 60 * 1000,
-  );
+  const key = clientKeyFromHeaders(headerList, "login");
+  const limit = rateLimit(key, 5, 5 * 60 * 1000);
 
   if (!limit.allowed) {
     const minutes = Math.ceil(limit.retryAfterSeconds / 60);
     return {
-      step: "email",
-      error: `Muitas solicitações. Tente novamente em ${minutes} min.`,
+      error: `Muitas tentativas. Tente novamente em ${minutes} minuto${
+        minutes > 1 ? "s" : ""
+      }.`,
     };
   }
 
-  const { result, code, email } = await issueLoginCode(parsed.data.email);
+  const session = await authenticate(parsed.data.email, parsed.data.password);
 
-  let loggedOnly = false;
-  let sendError: string | undefined;
-
-  if (result.issued && code) {
-    const sent = await sendLoginCode(email, code);
-    loggedOnly = sent.loggedOnly;
-    sendError = sent.error;
-  }
-
-  /*
-    Quando o envio falha, mostramos o motivo. Isso nao vaza a existencia da
-    conta: o texto fala do servico de e-mail, nao do e-mail informado, e so
-    aparece para quem ja configurou (ou nao) as credenciais do servidor.
-  */
-  const notice = loggedOnly
-    ? sendError
-      ? `${sendError} O código está nos logs do servidor.`
-      : "Código gerado. O envio por e-mail não está configurado — veja o código nos logs do servidor."
-    : "Se este e-mail tiver acesso, enviamos um código. Confira a caixa de entrada e o spam.";
-
-  return { step: "code", email, notice };
-}
-
-/** Etapa 2: valida o codigo e abre a sessao. */
-export async function verifyCodeAction(
-  _prev: LoginState,
-  formData: FormData,
-): Promise<LoginState> {
-  const email = String(formData.get("email") ?? "");
-
-  const parsed = loginCodeSchema.safeParse({
-    email,
-    code: formData.get("code"),
-  });
-
-  if (!parsed.success) {
-    return { step: "code", email, error: "Código inválido ou expirado." };
-  }
-
-  const headerList = await headers();
-  const key = clientKeyFromHeaders(headerList, "login-verify");
-  const limit = rateLimit(key, 10, 10 * 60 * 1000);
-
-  if (!limit.allowed) {
-    return {
-      step: "code",
-      email,
-      error: "Muitas tentativas. Aguarde alguns minutos.",
-    };
-  }
-
-  const result = await verifyLoginCode(parsed.data.email, parsed.data.code);
-
-  if (!result.ok || !result.userId || !result.email) {
-    return { step: "code", email, error: result.error ?? "Código inválido." };
+  if (!session) {
+    return { error: "E-mail ou senha inválidos." };
   }
 
   resetRateLimit(key);
-  await startSession({ userId: result.userId, email: result.email });
+  await startSession(session);
 
-  redirect(safeNext(formData.get("next")));
-}
+  const rawNext = formData.get("next");
+  // Aceita apenas caminhos internos - evita open redirect.
+  const next =
+    typeof rawNext === "string" &&
+    rawNext.startsWith("/admin") &&
+    !rawNext.startsWith("//")
+      ? rawNext
+      : "/admin";
 
-/** Volta para a etapa de e-mail. */
-export async function restartLoginAction(): Promise<LoginState> {
-  return { step: "email" };
+  redirect(next);
 }

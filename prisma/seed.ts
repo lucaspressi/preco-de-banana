@@ -122,19 +122,30 @@ async function seedAdmin() {
     throw new Error("ADMIN_PASSWORD precisa ter ao menos 8 caracteres.");
   }
 
+  const passwordHash = await bcrypt.hash(password, 12);
+
+  /*
+    Define a senha sempre que ADMIN_PASSWORD estiver presente.
+
+    Antes o seed preservava a senha de usuario existente, o que parecia mais
+    seguro - mas na pratica criava um beco sem saida: trocar ADMIN_PASSWORD e
+    rodar o seed nao surtia efeito, sem nenhum aviso. Como so quem ja tem
+    acesso ao ambiente consegue definir a variavel, aplicar a senha e o
+    comportamento esperado.
+  */
   const existing = await prisma.user.findUnique({ where: { email } });
 
-  if (existing) {
-    console.log(`✓ Admin ja existe: ${email} (senha preservada)`);
-    return;
-  }
-
-  const passwordHash = await bcrypt.hash(password, 12);
-  await prisma.user.create({
-    data: { email, passwordHash, name: "Administrador" },
+  await prisma.user.upsert({
+    where: { email },
+    update: { passwordHash },
+    create: { email, passwordHash, name: "Administrador" },
   });
 
-  console.log(`✓ Admin criado: ${email}`);
+  console.log(
+    existing
+      ? `✓ Admin atualizado: ${email} (senha redefinida)`
+      : `✓ Admin criado: ${email}`,
+  );
 }
 
 async function seedCategories() {

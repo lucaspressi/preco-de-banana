@@ -378,9 +378,9 @@ Por isso, **remova `ADMIN_PASSWORD` do ambiente após o primeiro deploy**. Uma
 senha em texto puro no painel do Render fica visível para qualquer pessoa com
 acesso à conta e pode vazar em logs.
 
-Para trocar a senha depois: atualize `ADMIN_PASSWORD`, apague o usuário no
-`/admin` (ou via Prisma Studio) e rode `npm run db:seed` de novo. O seed
-preserva usuários já existentes.
+Para trocar a senha depois: atualize `ADMIN_PASSWORD` e rode
+`npm run db:seed`. Alternativa sem mexer em variável:
+`npm run admin:reset-password -- seu@email.com "nova-senha"`.
 
 ### Não consigo entrar no painel
 
@@ -413,11 +413,10 @@ Para redefinir:
 npm run admin:reset-password -- seu@email.com "nova-senha-forte"
 ```
 
-> **Por que o seed não resolve sozinho:** se o usuário já existe, o seed
-> **preserva a senha atual** e não a sobrescreve. Isso é intencional — evita
-> que rodar o seed de novo apague uma senha que você trocou depois. Quando
-> você muda `ADMIN_PASSWORD` no painel do Render e roda o seed esperando que
-> a senha mude, ela **não muda**. Use `admin:reset-password` nesse caso.
+> **Trocar a senha:** atualize `ADMIN_PASSWORD` no painel do Render e rode
+> `npm run db:seed` de novo. O seed **redefine** a senha do usuário existente.
+> Só quem já tem acesso ao ambiente consegue alterar a variável, então
+> aplicar o valor é o comportamento esperado.
 
 ### Privacidade dos cliques
 

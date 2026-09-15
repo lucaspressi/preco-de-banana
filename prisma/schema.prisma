@@ -23,22 +23,6 @@ model User {
   @@map("users")
 }
 
-/// Codigo de acesso enviado por e-mail (login sem senha).
-/// Guardamos apenas o hash do codigo - um vazamento do banco nao permite
-/// entrar. Expira em minutos e e de uso unico.
-model LoginToken {
-  id        String   @id @default(cuid())
-  email     String
-  codeHash  String
-  expiresAt DateTime
-  usedAt    DateTime?
-  attempts  Int      @default(0)
-  createdAt DateTime @default(now())
-
-  @@index([email, expiresAt])
-  @@map("login_tokens")
-}
-
 /// Categoria de produtos (Eletronicos, Casa Inteligente, ...)
 model Category {
   id          String    @id @default(cuid())

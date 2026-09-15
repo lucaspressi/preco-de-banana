@@ -48,14 +48,6 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Senha obrigatoria").max(200),
 });
 
-export const loginEmailSchema = z.object({
-  email: z.string().trim().toLowerCase().email("E-mail invalido"),
-});
-
-export const loginCodeSchema = z.object({
-  email: z.string().trim().toLowerCase().email("E-mail invalido"),
-  code: z.string().trim().regex(/^\d{6}$/, "O codigo tem 6 digitos"),
-});
 
 export const productSchema = z.object({
   name: z.string().trim().min(2, "Nome muito curto").max(200),

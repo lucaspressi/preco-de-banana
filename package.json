@@ -18,8 +18,7 @@
     "admin:reset-password": "tsx scripts/reset-admin-password.ts",
     "render:build": "npm ci && prisma generate && prisma migrate deploy && next build",
     "render:start": "next start -p ${PORT:-3000}",
-    "promo:check": "tsx scripts/check-promo-feed.ts",
-    "mail:check": "tsx scripts/check-mail.ts"
+    "promo:check": "tsx scripts/check-promo-feed.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

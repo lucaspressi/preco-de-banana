@@ -17,19 +17,7 @@ interface HeroProps {
   telegramUrl: string;
 }
 
-/**
- * Divide o titulo para o efeito bicolor da referencia: a ULTIMA palavra
- * ganha destaque em amarelo, o restante fica em tom escuro.
- * "PRECO DE BANANA" -> "PRECO DE" / "BANANA"
- */
-function splitTitle(title: string): [string, string] {
-  const words = title.trim().split(/\s+/);
-  if (words.length <= 1) return [title, ""];
-  return [words.slice(0, -1).join(" "), words[words.length - 1]];
-}
-
 export function Hero({ title, subtitle, telegramUrl }: HeroProps) {
-  const [firstLine, restLine] = splitTitle(title);
   const heroImage = getHeroImage();
 
   // "As melhores promocoes da internet, todos os dias!" -> a ultima frase
@@ -60,15 +48,20 @@ export function Hero({ title, subtitle, telegramUrl }: HeroProps) {
       <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 sm:px-6 lg:grid-cols-2 lg:gap-4 lg:py-16 lg:px-8">
         {/* Coluna esquerda */}
         <div className="relative z-10">
-          <h1 className="heading-xl text-[2.75rem] drop-shadow-sm sm:text-6xl lg:text-7xl">
-            <span className="block text-white [paint-order:stroke_fill] [-webkit-text-stroke:5px_var(--color-ink-900)]">
-              {firstLine}
-            </span>
-            {restLine && (
-              <span className="block text-brand-500 [paint-order:stroke_fill] [-webkit-text-stroke:5px_var(--color-ink-900)]">
-                {restLine}
-              </span>
-            )}
+          {/*
+            O titulo e a propria arte da marca. O <h1> continua existindo com
+            o texto no alt, entao leitores de tela e buscadores enxergam
+            "PRECO DE BANANA" normalmente.
+          */}
+          <h1>
+            <Image
+              src="/wordmark.webp"
+              alt={title}
+              width={1344}
+              height={587}
+              priority
+              className="h-auto w-full max-w-[22rem] drop-shadow-[0_4px_10px_rgba(0,0,0,0.18)] sm:max-w-[26rem] lg:max-w-[30rem]"
+            />
           </h1>
 
           <p className="mt-4 max-w-md text-base font-extrabold uppercase leading-snug text-ink-900 sm:text-lg">

@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import {
+  BoltIcon,
   CartIcon,
   ShieldIcon,
   SparklesIcon,
@@ -31,27 +32,57 @@ export function Hero({ title, subtitle, telegramUrl }: HeroProps) {
   const [firstLine, restLine] = splitTitle(title);
   const heroImage = getHeroImage();
 
+  // "As melhores promocoes da internet, todos os dias!" -> a ultima frase
+  // ganha o marcador amarelo, como na referencia.
+  const [subMain, subHighlight] = (() => {
+    const parts = subtitle.split(",");
+    if (parts.length < 2) return [subtitle, ""];
+    return [parts.slice(0, -1).join(",") + ",", parts[parts.length - 1].trim()];
+  })();
+
   return (
     <section className="hero-glow relative overflow-hidden">
-      <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 sm:px-6 lg:grid-cols-2 lg:gap-4 lg:py-16 lg:px-8">
+      {/* Padrao de bananas ao fundo, esmaecido para nao competir com o texto */}
+      <Image
+        src="/bananas-bg.webp"
+        alt=""
+        aria-hidden="true"
+        fill
+        priority
+        sizes="100vw"
+        className="pointer-events-none select-none object-cover opacity-45"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-brand-100 via-brand-100/80 to-transparent"
+      />
+
+      <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 sm:px-6 lg:grid-cols-2 lg:gap-4 lg:py-16 lg:px-8">
         {/* Coluna esquerda */}
         <div className="relative z-10">
-          <h1 className="heading-xl text-[2.75rem] sm:text-6xl lg:text-7xl">
-            <span className="block text-ink-900">{firstLine}</span>
+          <h1 className="heading-xl text-[2.75rem] drop-shadow-sm sm:text-6xl lg:text-7xl">
+            <span className="block text-white [paint-order:stroke_fill] [-webkit-text-stroke:5px_var(--color-ink-900)]">
+              {firstLine}
+            </span>
             {restLine && (
-              <span className="block text-brand-500 [-webkit-text-stroke:2px_var(--color-ink-900)]">
+              <span className="block text-brand-500 [paint-order:stroke_fill] [-webkit-text-stroke:5px_var(--color-ink-900)]">
                 {restLine}
               </span>
             )}
           </h1>
 
-          <p className="mt-5 max-w-md text-base leading-relaxed text-ink-500 sm:text-lg">
-            {subtitle}
+          <p className="mt-4 max-w-md text-base font-extrabold uppercase leading-snug text-ink-900 sm:text-lg">
+            {subMain}
+            {subHighlight && (
+              <span className="mt-1 inline-block bg-brand-400 px-2 py-0.5 text-ink-900">
+                {subHighlight}
+              </span>
+            )}
           </p>
 
           <div className="mt-7">
             <TelegramButton href={telegramUrl} size="lg" className="w-full sm:w-auto">
-              Entre no grupo do Telegram
+              Entrar no grupo grátis
             </TelegramButton>
 
             {!telegramUrl?.trim() && (
@@ -63,13 +94,19 @@ export function Hero({ title, subtitle, telegramUrl }: HeroProps) {
             )}
           </div>
 
-          <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold uppercase tracking-wide text-ink-500">
-            <ShieldIcon className="h-4 w-4 text-brand-600" />
-            <span>100% grátis</span>
-            <span aria-hidden="true" className="text-slate-300">
-              •
+          <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-extrabold uppercase tracking-wide text-ink-900">
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldIcon className="h-4 w-4" />
+              Grátis
             </span>
-            <span>Ofertas todos os dias</span>
+            <span className="inline-flex items-center gap-1.5">
+              <BoltIcon className="h-4 w-4" />
+              Rápido
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldIcon className="h-4 w-4" />
+              Seguro
+            </span>
           </p>
         </div>
 

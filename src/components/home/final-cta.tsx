@@ -11,7 +11,8 @@ export function FinalCta({ telegramUrl }: FinalCtaProps) {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="relative overflow-hidden rounded-3xl bg-brand-600 px-6 py-10 sm:px-10 lg:px-14">
+      {/* Faixa marrom escura do rodape da referencia */}
+      <div className="relative overflow-hidden rounded-3xl bg-ink-900 px-6 py-10 sm:px-10 lg:px-14">
         <TelegramIcon
           className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 text-white/10"
           aria-hidden="true"
@@ -20,10 +21,11 @@ export function FinalCta({ telegramUrl }: FinalCtaProps) {
         <div className="relative flex flex-col items-start gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl">
             <h2 className="font-display text-2xl font-extrabold uppercase leading-tight tracking-tight text-white sm:text-3xl">
-              Pronto para economizar de verdade?
+              Entre no grupo e pague{" "}
+              <span className="text-brand-400">preço de banana!</span>
             </h2>
             <p className="mt-2 text-sm text-white/85 sm:text-base">
-              Entre agora no grupo do Telegram e receba as melhores ofertas.
+              Grátis • Rápido • Sem spam
             </p>
           </div>
 
@@ -34,7 +36,7 @@ export function FinalCta({ telegramUrl }: FinalCtaProps) {
               size="lg"
               className="w-full lg:w-auto"
             >
-              Quero entrar no grupo agora!
+              Entrar agora no grupo grátis
             </TelegramButton>
             <p className="mt-3 text-center text-[11px] font-semibold uppercase tracking-wide text-white/75 lg:text-left">
               Grátis para sempre • Ofertas todos os dias

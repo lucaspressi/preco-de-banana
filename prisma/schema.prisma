@@ -1,0 +1,184 @@
+// Preço de Banana - schema Prisma
+// Banco: PostgreSQL (Render)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Usuario administrativo. Criado exclusivamente via seed.
+/// A senha nunca e armazenada em texto puro - apenas o hash bcrypt.
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+/// Categoria de produtos (Eletronicos, Casa Inteligente, ...)
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  /// Nome do icone (lucide-like) renderizado no frontend
+  icon        String?
+  imageUrl    String?
+  isActive    Boolean   @default(true)
+  priority    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products    Product[]
+
+  @@index([isActive, priority])
+  @@map("categories")
+}
+
+/// Loja parceira (Amazon, Mercado Livre, ...)
+model Store {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  logoUrl   String?
+  url       String?
+  isActive  Boolean   @default(true)
+  priority  Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products  Product[]
+  coupons   Coupon[]
+
+  @@index([isActive, priority])
+  @@map("stores")
+}
+
+/// Produto / oferta divulgada no site
+model Product {
+  id                 String    @id @default(cuid())
+  name               String
+  slug               String    @unique
+  description        String?
+  imageUrl           String?
+  /// Link de afiliado - destino final do redirect /go/[id]
+  affiliateUrl       String
+  /// URL original usada na importacao (para referencia/reimportacao)
+  originalUrl        String?
+
+  originalPrice      Decimal?  @db.Decimal(10, 2)
+  currentPrice       Decimal?  @db.Decimal(10, 2)
+  /// Calculado a partir dos precos quando nao informado manualmente
+  discountPercentage Int?
+  couponCode         String?
+
+  categoryId         String?
+  category           Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  storeId            String?
+  store              Store?    @relation(fields: [storeId], references: [id], onDelete: SetNull)
+
+  isFeatured         Boolean   @default(false)
+  isFlashDeal        Boolean   @default(false)
+  isActive           Boolean   @default(true)
+
+  priority           Int       @default(0)
+  /// Usado pelas ofertas relampago - apos expirar sai da secao automaticamente
+  expiresAt          DateTime?
+
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  clicks             AffiliateClick[]
+
+  @@index([isActive, isFeatured, priority])
+  @@index([isActive, isFlashDeal, expiresAt])
+  @@index([categoryId])
+  @@index([storeId])
+  @@index([createdAt])
+  @@map("products")
+}
+
+/// Cupom de desconto
+model Coupon {
+  id           String    @id @default(cuid())
+  title        String
+  code         String
+  description  String?
+  /// Texto livre do desconto: "20% OFF", "R$ 50 OFF"
+  discount     String?
+  affiliateUrl String?
+
+  storeId      String?
+  store        Store?    @relation(fields: [storeId], references: [id], onDelete: SetNull)
+
+  expiresAt    DateTime?
+  isActive     Boolean   @default(true)
+  priority     Int       @default(0)
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([isActive, priority])
+  @@index([storeId])
+  @@map("coupons")
+}
+
+/// Depoimento real de membro do grupo.
+/// A secao so e renderizada quando existem registros ativos -
+/// o site nunca exibe depoimentos ficticios.
+model Testimonial {
+  id        String   @id @default(cuid())
+  authorName String
+  content   String
+  /// 1..5 - opcional
+  rating    Int?
+  avatarUrl String?
+  isActive  Boolean  @default(true)
+  priority  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, priority])
+  @@map("testimonials")
+}
+
+/// Clique registrado antes do redirect para o afiliado.
+/// Nao armazena IP nem dados pessoais.
+model AffiliateClick {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  referrer  String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
+  @@map("affiliate_clicks")
+}
+
+/// Configuracoes globais do site - linha unica (id = "singleton").
+/// Evita URLs hardcoded espalhadas pelo projeto.
+model SiteSettings {
+  id              String   @id @default("singleton")
+  siteName        String   @default("Preço de Banana")
+  siteDescription String   @default("Promocoes, cupons e produtos selecionados para voce pagar preco de banana.")
+  telegramUrl     String   @default("")
+  instagramUrl    String?
+  youtubeUrl      String?
+  contactEmail    String?
+  heroTitle       String   @default("PREÇO DE BANANA")
+  heroSubtitle    String   @default("As melhores promocoes da internet, todos os dias!")
+  updatedAt       DateTime @updatedAt
+
+  @@map("site_settings")
+}

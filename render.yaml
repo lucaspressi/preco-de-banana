@@ -1,0 +1,64 @@
+# ---------------------------------------------------------------
+# Render Blueprint - Preço de Banana
+#
+# Cria o banco PostgreSQL e o Web Service de uma vez.
+# No painel do Render: New + > Blueprint > selecione este repositorio.
+#
+# Depois do primeiro deploy, rode o seed no Shell do servico:
+#   npm run db:seed
+# ---------------------------------------------------------------
+
+databases:
+  - name: pdb-db
+    databaseName: precodebanana
+    user: precodebanana
+    plan: free
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: preco-de-banana
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+
+    # --include=dev e obrigatorio: com NODE_ENV=production o npm ci ignora
+    # devDependencies, mas o build precisa de @tailwindcss/postcss,
+    # tailwindcss, typescript, prisma e tsx. Sem isso o build quebra em
+    # globals.css ("Cannot find module '@tailwindcss/postcss'").
+    #
+    # migrate deploy aplica apenas migrations pendentes e nunca apaga dados
+    # (diferente de "migrate dev").
+    buildCommand: npm ci --include=dev && npx prisma generate && npx prisma migrate deploy && npm run build
+    startCommand: npm run start
+
+    healthCheckPath: /
+
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pdb-db
+          property: connectionString
+
+      # Gerado automaticamente pelo Render - nunca versionado.
+      - key: AUTH_SECRET
+        generateValue: true
+
+      - key: NODE_ENV
+        value: production
+
+      - key: NODE_VERSION
+        value: "22"
+
+      # Preencha no painel com a URL publica final
+      # (ex.: https://preco-de-banana.onrender.com ou dominio proprio).
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false
+
+      # Lidas SOMENTE pelo seed (npm run db:seed).
+      # Depois de criar o admin, ADMIN_PASSWORD pode ser removida daqui.
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

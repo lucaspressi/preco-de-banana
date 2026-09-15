@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Espaco reservado para o mascote">
+  <defs><clipPath id="c"><circle cx="200" cy="200" r="150"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="400" height="400" fill="#fef3c7"/>
+    <circle cx="200" cy="158" r="58" fill="#fcd34d"/>
+    <path d="M92 400c0-63 48-112 108-112s108 49 108 112z" fill="#fcd34d"/>
+  </g>
+  <circle cx="200" cy="200" r="150" fill="none" stroke="#f5b301" stroke-width="3" stroke-dasharray="10 8"/>
+  <text x="200" y="368" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#854d0e">public/mascote.png</text>
+</svg>

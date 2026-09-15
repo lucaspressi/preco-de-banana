@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+/*
+  Preco de Banana - design tokens
+  Paleta extraida da referencia visual: amarelo banana dominante,
+  verde nos CTAs principais, marrom escuro para texto e contraste.
+*/
+@theme {
+  /* Amarelo banana - cor da marca */
+  --color-brand-50: #fffbeb;
+  --color-brand-100: #fef3c7;
+  --color-brand-200: #fde68a;
+  --color-brand-300: #fcd34d;
+  --color-brand-400: #fbbf24;
+  /*
+    300-500: amarelo vivo, para preenchimentos e destaques.
+    600+:    ambar escurecido. Branco sobre #a16207 da ~4.7:1 (AA), e o
+             mesmo tom como texto sobre branco tambem passa. Amarelo puro
+             falharia em ambos os casos.
+  */
+  --color-brand-500: #f5b301;
+  --color-brand-600: #a16207;
+  --color-brand-700: #854d0e;
+  --color-brand-800: #713f12;
+  --color-brand-900: #5a3310;
+
+  /* Marrom escuro para titulos e texto de alto contraste */
+  --color-ink-500: #7c6849;
+  --color-ink-700: #4a3a24;
+  --color-ink-900: #2b2013;
+
+  /* Verde - CTAs principais (entrar no grupo) */
+  --color-accent-300: #4ade80;
+  --color-accent-400: #22c55e;
+  --color-accent-500: #16a34a;
+  --color-accent-600: #15803d;
+
+  --color-success-500: #16a34a;
+  --color-danger-500: #dc2626;
+
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+  --font-display:
+    var(--font-archivo), var(--font-inter), ui-sans-serif, system-ui,
+    sans-serif;
+
+  --radius-card: 1rem;
+
+  --shadow-card: 0 1px 3px rgb(15 23 42 / 0.06), 0 6px 20px rgb(15 23 42 / 0.06);
+  --shadow-card-hover:
+    0 2px 6px rgb(15 23 42 / 0.08), 0 14px 34px rgb(15 23 42 / 0.12);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: #ffffff;
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Foco visivel e consistente - requisito de acessibilidade */
+:focus-visible {
+  outline: 3px solid var(--color-brand-600);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Titulos no estilo condensado da referencia */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.heading-xl {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+/* Fundo quente da hero, como na referencia */
+.hero-glow {
+  background:
+    radial-gradient(
+      70% 70% at 75% 35%,
+      var(--color-brand-200) 0%,
+      transparent 70%
+    ),
+    linear-gradient(180deg, var(--color-brand-100) 0%, var(--color-brand-50) 100%);
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-marquee {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Esconde a scrollbar em carrosseis horizontais */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -15,6 +15,30 @@ export interface SendResult {
   delivered: boolean;
   /** true quando caiu no fallback de log (sem servico configurado). */
   loggedOnly: boolean;
+  /** Motivo resumido da falha, exibido ao admin. */
+  error?: string;
+}
+
+/** Traduz o erro do Resend para algo acionavel na tela. */
+function explain(status: number, body: string): string {
+  const lower = body.toLowerCase();
+
+  if (status === 401 || status === 403) {
+    return "A RESEND_API_KEY parece invalida ou revogada.";
+  }
+  if (lower.includes("own email") || lower.includes("testing emails")) {
+    return (
+      "O Resend so entrega para o e-mail dono da conta enquanto voce usa " +
+      "onboarding@resend.dev. Verifique um dominio e defina MAIL_FROM."
+    );
+  }
+  if (lower.includes("domain") && lower.includes("verif")) {
+    return "O dominio do MAIL_FROM nao esta verificado no Resend.";
+  }
+  if (status === 422) {
+    return "O Resend recusou o remetente ou o destinatario.";
+  }
+  return `O servico de e-mail respondeu ${status}.`;
 }
 
 function fromAddress(): string {
@@ -76,16 +100,26 @@ export async function sendLoginCode(
 
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
-      console.error(`[login] Resend HTTP ${response.status}: ${detail.slice(0, 200)}`);
+      console.error(
+        `[login] Resend HTTP ${response.status}: ${detail.slice(0, 300)}`,
+      );
       // Fallback: o admin ainda consegue entrar lendo o log.
       console.warn(`[login] Codigo para ${email}: ${code}`);
-      return { delivered: false, loggedOnly: true };
+      return {
+        delivered: false,
+        loggedOnly: true,
+        error: explain(response.status, detail),
+      };
     }
 
     return { delivered: true, loggedOnly: false };
   } catch (error) {
     console.error("[login] falha ao enviar e-mail:", error);
     console.warn(`[login] Codigo para ${email}: ${code}`);
-    return { delivered: false, loggedOnly: true };
+    return {
+      delivered: false,
+      loggedOnly: true,
+      error: "Nao consegui contatar o servico de e-mail.",
+    };
   }
 }

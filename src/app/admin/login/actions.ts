@@ -63,18 +63,26 @@ export async function requestCodeAction(
   const { result, code, email } = await issueLoginCode(parsed.data.email);
 
   let loggedOnly = false;
+  let sendError: string | undefined;
+
   if (result.issued && code) {
     const sent = await sendLoginCode(email, code);
     loggedOnly = sent.loggedOnly;
+    sendError = sent.error;
   }
 
-  return {
-    step: "code",
-    email,
-    notice: loggedOnly
-      ? "Código gerado. O envio por e-mail não está configurado — veja o código nos logs do servidor."
-      : "Se este e-mail tiver acesso, enviamos um código. Confira a caixa de entrada.",
-  };
+  /*
+    Quando o envio falha, mostramos o motivo. Isso nao vaza a existencia da
+    conta: o texto fala do servico de e-mail, nao do e-mail informado, e so
+    aparece para quem ja configurou (ou nao) as credenciais do servidor.
+  */
+  const notice = loggedOnly
+    ? sendError
+      ? `${sendError} O código está nos logs do servidor.`
+      : "Código gerado. O envio por e-mail não está configurado — veja o código nos logs do servidor."
+    : "Se este e-mail tiver acesso, enviamos um código. Confira a caixa de entrada e o spam.";
+
+  return { step: "code", email, notice };
 }
 
 /** Etapa 2: valida o codigo e abre a sessao. */

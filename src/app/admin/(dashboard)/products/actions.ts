@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import { CACHE_TAGS } from "@/lib/queries";
 import { slugify } from "@/lib/utils";
+import { fetchPromoProducts } from "@/lib/promo-feed";
 import { productSchema } from "@/lib/validations";
 
 export interface ProductFormState {
@@ -232,6 +233,23 @@ export async function deleteProductAction(formData: FormData): Promise<void> {
 }
 
 /** Alterna isActive, isFeatured ou isFlashDeal direto na listagem. */
+
+export interface PromoFeedItem {
+  id: string;
+  title: string;
+  price: number | null;
+  oldPrice: number | null;
+  discountPct: number | null;
+  imageUrl: string | null;
+  url: string | null;
+  category: string | null;
+}
+
+export async function fetchPromoFeedAction(): Promise<PromoFeedItem[]> {
+  await requireAdmin();
+  return fetchPromoProducts({ limit: 50, sort: "discount" });
+}
+
 export async function toggleProductFlagAction(
   formData: FormData,
 ): Promise<void> {

@@ -8,8 +8,10 @@ import { cn, slugify } from "@/lib/utils";
 
 import {
   createProductAction,
+  fetchPromoFeedAction,
   updateProductAction,
   type ProductFormState,
+  type PromoFeedItem,
 } from "./actions";
 import { ProductPreview } from "./product-preview";
 
@@ -101,9 +103,13 @@ export function ProductForm({
   );
   const [slugTouched, setSlugTouched] = useState(mode === "edit");
 
-  const [importMode, setImportMode] = useState<"message" | "link">("message");
+  const [importMode, setImportMode] = useState<
+    "message" | "link" | "feed"
+  >("message");
   const [importUrl, setImportUrl] = useState("");
   const [messageText, setMessageText] = useState("");
+  const [feedItems, setFeedItems] = useState<PromoFeedItem[]>([]);
+  const [feedLoading, setFeedLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importMessage, setImportMessage] = useState<{
     text: string;
@@ -212,6 +218,53 @@ export function ProductForm({
    * (meli.la, amzn.to), que costuma redirecionar para fora da pagina
    * do produto - onde nao ha preco.
    */
+  /**
+   * Busca as ofertas do feed externo e permite preencher o formulario.
+   */
+  async function handleLoadFeed() {
+    setFeedLoading(true);
+    setImportMessage(null);
+
+    try {
+      const items = await fetchPromoFeedAction();
+      setFeedItems(items);
+      if (items.length === 0) {
+        setImportMessage({
+          text: "Nenhuma oferta disponivel no feed. Verifique PROMO_API_URL.",
+          tone: "warn",
+        });
+      }
+    } catch {
+      setImportMessage({
+        text: "Nao foi possivel carregar o feed.",
+        tone: "error",
+      });
+    } finally {
+      setFeedLoading(false);
+    }
+  }
+
+  function applyFeedItem(item: PromoFeedItem) {
+    setValues((prev) => ({
+      ...prev,
+      name: item.title,
+      slug: prev.slug || slugify(item.title),
+      imageUrl: item.imageUrl ?? prev.imageUrl,
+      affiliateUrl: item.url ?? prev.affiliateUrl,
+      originalUrl: item.url ?? prev.originalUrl,
+      currentPrice: item.price !== null ? String(item.price) : prev.currentPrice,
+      originalPrice:
+        item.oldPrice !== null ? String(item.oldPrice) : prev.originalPrice,
+      discountPercentage:
+        item.discountPct !== null ? String(item.discountPct) : prev.discountPercentage,
+      storeId: matchStore(item.category) ?? prev.storeId,
+    }));
+    setImportMessage({
+      text: "Produto carregado. Revise os campos antes de publicar.",
+      tone: "ok",
+    });
+  }
+
   async function handleImportMessage() {
     const text = messageText.trim();
     if (!text) return;
@@ -345,6 +398,24 @@ export function ProductForm({
               >
                 Importar por link
               </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={importMode === "feed"}
+                onClick={() => {
+                  setImportMode("feed");
+                  setImportMessage(null);
+                  if (feedItems.length === 0) void handleLoadFeed();
+                }}
+                className={cn(
+                  "flex-1 rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide transition-colors",
+                  importMode === "feed"
+                    ? "bg-brand-600 text-white"
+                    : "text-ink-500 hover:bg-slate-100",
+                )}
+              >
+                Importar do feed
+              </button>
             </div>
 
             {importMode === "message" ? (
@@ -421,10 +492,86 @@ export function ProductForm({
               </p>
             )}
 
+            {importMode === "feed" && (
+              <div className="mt-4">
+                {feedLoading ? (
+                  <p className="py-6 text-center text-sm text-ink-500">
+                    Carregando ofertas...
+                  </p>
+                ) : feedItems.length === 0 ? (
+                  <div className="py-6 text-center">
+                    <p className="text-sm text-ink-500">
+                      Nenhuma oferta carregada.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void handleLoadFeed()}
+                      className="mt-3 inline-flex rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-brand-700"
+                    >
+                      Buscar ofertas do feed
+                    </button>
+                  </div>
+                ) : (
+                  <ul className="max-h-96 space-y-2 overflow-y-auto">
+                    {feedItems.map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-2"
+                      >
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-50">
+                          {item.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={item.imageUrl}
+                              alt=""
+                              className="h-full w-full object-contain"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-[9px] text-slate-400">
+                              sem foto
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-semibold text-ink-900">
+                            {item.title}
+                          </p>
+                          <p className="text-[11px] text-ink-500">
+                            {item.price !== null ? `R$ ${item.price}` : "Ver preco"}
+                            {item.oldPrice !== null && (
+                              <>
+                                {" "}
+                                <s>R$ {item.oldPrice}</s>
+                              </>
+                            )}
+                            {item.discountPct !== null && (
+                              <span className="ml-1 font-bold text-red-600">
+                                -{item.discountPct}%
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => applyFeedItem(item)}
+                          className="shrink-0 rounded-lg bg-accent-500 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-accent-600"
+                        >
+                          Preencher
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
             <p className="mt-3 text-[11px] leading-relaxed text-ink-500">
               {importMode === "message"
                 ? "Links encurtados de afiliado (meli.la, amzn.to) costumam não levar à página do produto — por isso o texto da mensagem é a fonte mais confiável de preço. Nada é salvo até você publicar."
-                : "Algumas lojas bloqueiam leitura automática ou carregam o preço via JavaScript. Nesses casos, use a aba “Colar mensagem” ou preencha manualmente."}
+                : importMode === "link"
+                  ? "Algumas lojas bloqueiam leitura automática ou carregam o preço via JavaScript. Nesses casos, use a aba “Colar mensagem” ou preencha manualmente."
+                  : "O feed exibe ofertas ja publicadas no promo.anbu.pro. Selecione uma para preencher o formulario e publica-la aqui."}
             </p>
           </section>
         )}

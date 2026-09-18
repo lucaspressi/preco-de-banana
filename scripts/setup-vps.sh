@@ -48,11 +48,22 @@ ufw allow 'Nginx Full'
 ufw --force enable
 
 echo "==> Instalando Node.js ${NODE_VERSION}"
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_VERSION}.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
-apt-get update
-apt-get install -y nodejs
+# Remove completamente qualquer vestigio do NodeSource para evitar conflitos.
+rm -f /etc/apt/sources.list.d/nodesource.list
+rm -f /etc/apt/sources.list.d/nodesource*
+rm -f /usr/share/keyrings/nodesource.gpg /etc/apt/keyrings/nodesource.gpg
+sed -i '/nodesource/d' /etc/apt/sources.list
+apt-get clean
+rm -rf /var/lib/apt/lists/*nodesource*
+
+# Instala Node.js via binario oficial - evita conflitos de repositorio apt.
+NODE_TARBALL="node-v22.13.1-linux-x64.tar.xz"
+curl -fsSL "https://nodejs.org/dist/v22.13.1/${NODE_TARBALL}" -o "/tmp/${NODE_TARBALL}"
+tar -xJf "/tmp/${NODE_TARBALL}" -C /usr/local --strip-components=1
+rm -f "/tmp/${NODE_TARBALL}"
+ln -sf /usr/local/bin/node /usr/bin/node
+ln -sf /usr/local/bin/npm /usr/bin/npm
+node --version
 
 echo "==> Instalando PM2"
 npm install -g pm2

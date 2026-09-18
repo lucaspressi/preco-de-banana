@@ -28,6 +28,10 @@ export DEBIAN_FRONTEND=noninteractive
 # Limpa repositorios quebrados ou conflitantes do NodeSource de runs anteriores.
 rm -f /usr/share/keyrings/nodesource.gpg /etc/apt/keyrings/nodesource.gpg
 rm -f /etc/apt/sources.list.d/nodesource.list
+rm -f /etc/apt/sources.list.d/nodesource*
+# Remove qualquer linha nodesource do sources.list principal.
+sed -i '/nodesource/d' /etc/apt/sources.list
+apt-get clean
 
 echo "==> Atualizando pacotes"
 apt-get update

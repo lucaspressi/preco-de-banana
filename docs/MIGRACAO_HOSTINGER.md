@@ -15,13 +15,15 @@ No painel da Hostinger (ou onde gerencia o DNS), crie:
 
 ```
 Tipo A     @    187.127.22.100
-Tipo A     www  187.127.22.100
+Tipo CNAME www  precobanana.com.br
+
+> Se ja existir um CNAME `www` apontando para o dominio raiz, mantenha ele.
 ```
 
 Aguarde a propagação (pode levar minutos a horas). Confira com:
 
 ```bash
-nslookup precodebanana.com.br
+nslookup precobanana.com.br
 ```
 
 ## 2. Rode o script de setup na VPS
@@ -35,8 +37,8 @@ ssh root@187.127.22.100
 Baixe e execute o script (substitua o domínio e e-mail):
 
 ```bash
-export DOMAIN="precodebanana.com.br"
-export EMAIL="admin@precodebanana.com.br"
+export DOMAIN="precobanana.com.br"
+export EMAIL="admin@precobanana.com.br"
 
 curl -fsSL https://raw.githubusercontent.com/lucaspressi/preco-de-banana/main/scripts/setup-vps.sh -o setup-vps.sh
 nano setup-vps.sh   # revise se quiser
@@ -59,8 +61,8 @@ Ao final, ele exibe a URL e o caminho do `.env`.
 
 ## 3. Acesse e verifique
 
-- Site público: `https://precodebanana.com.br`
-- Painel admin: `https://precodebanana.com.br/admin/login`
+- Site público: `https://precobanana.com.br`
+- Painel admin: `https://precobanana.com.br/admin/login`
 
 As credenciais do admin estão em `/var/www/preco-de-banana/.env`.
 
@@ -154,7 +156,7 @@ AUTH_SECRET="..."
 ADMIN_EMAIL="..."
 ADMIN_PASSWORD="..."
 PROMO_API_URL="https://promo.anbu.pro/api/products"
-NEXT_PUBLIC_SITE_URL="https://precodebanana.com.br"
+NEXT_PUBLIC_SITE_URL="https://precobanana.com.br"
 ```
 
 Para alterar a senha do admin, edite `ADMIN_PASSWORD` e rode:

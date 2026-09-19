@@ -5,9 +5,6 @@ import { TelegramButton } from "@/components/telegram-button";
 import { getSiteSettings } from "@/lib/settings";
 
 const FOOTER_LINKS = [
-  { href: "/ofertas", label: "Ofertas" },
-  { href: "/#categorias", label: "Categorias" },
-  { href: "/cupons", label: "Cupons" },
   { href: "/politica-de-privacidade", label: "Política de Privacidade" },
   { href: "/termos-de-uso", label: "Termos de Uso" },
 ];
